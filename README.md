@@ -41,6 +41,62 @@
 | **File Uploads** | `react-dropzone` |
 
 ---
+## 📦 Installation & Dependencies
+
+You can install all necessary libraries using **one single command** or install them step-by-step by category.
+
+---
+
+### 🚀 Option 1: Quick Install (Recommended)
+
+Run this command to install all AI, PDF, and UI dependencies at once:
+
+```bash
+npm install @google/generative-ai groq-sdk pdfjs-dist react-dropzone
+```
+
+---
+
+### 🧩 Option 2: Install by Category
+
+#### 1️⃣ AI Libraries (Gemini & Groq)
+
+```bash
+npm install @google/generative-ai groq-sdk
+```
+
+#### 2️⃣ PDF & File Upload Tools
+
+```bash
+npm install pdfjs-dist react-dropzone
+```
+
+#### 3️⃣ Tailwind CSS (Styling)
+
+> Only run this if Tailwind is not already configured in your Next.js project.
+
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+---
+
+## 📚 Summary of Packages
+
+| Package | Description |
+|----------|-------------|
+| `pdfjs-dist` | Library to parse and extract text/images from PDF resumes (client-side) |
+| `react-dropzone` | Drag-and-drop file upload component for resume uploads |
+| `tailwindcss` | Utility-first CSS framework for styling UI components and dashboard |
+
+---
+
+✅ Make sure all dependencies are installed before running:
+
+```bash
+npm run dev
+```
 
 ## 🚀 Installation & Setup Guide
 
