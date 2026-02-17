@@ -2,76 +2,58 @@
 
 **AI CareerBoost** is a next-generation AI-powered career assistant designed to help job seekers optimize their resumes, plan their career paths, and prepare for technical interviews. Powered by **Google Gemini** and **Groq (Llama-3)**, it provides deep, actionable insights tailored specifically to the **Indian Tech Market**.
 
-![Dashboard Preview](public/images/dashboard-preview.png)
-
-> Replace `public/images/dashboard-preview.png` with the correct screenshot path if needed.
+![Dashboard Preview](C:/Users/Abhishek/Pictures/Screenshots/Dashboard.png)
+*(Note: This image demonstrates the analysis dashboard. Actual UI may vary.)*
 
 ---
 
 ## ✨ Key Features
 
 ### 📄 1. AI Resume Analysis (Strict ATS Mode)
-
 - **ATS Scoring:** Scans resumes against job descriptions and calculates an ATS compatibility score (0–100).
 - **Deep Feedback:** Detailed breakdown on Content, Structure, Skills, and Tone.
 - **Missing Keywords:** Detects critical missing technical keywords (React, AWS, Python, etc.).
 
----
-
 ### 🗺️ 2. Personalized Career Roadmap (Indian Context)
-
 - **5-Phase Execution Plan:** Based on resume gaps.
 - **Salary Insights (₹ LPA):** Fresher vs Experienced estimates (Indian Market).
 - **Curated Resources:** Suggested courses, documentation, and real-world projects.
 
----
-
 ### 💻 3. CodeQuest – AI Technical Interviewer
-
 - **Mock Coding Tests:** Medium-level challenges (Python / JavaScript).
 - **AI Code Review:** Bug detection, quality rating, and optimized solutions.
 
----
-
 ### 🔗 4. LinkedIn Optimizer
-
-- Professional Headlines
-- Optimized “About” Summary
-- Skill Recommendations for better visibility
+- **Profile Enhancer:** Generates professional headlines, "About" summaries, and skill lists to boost your LinkedIn visibility.
 
 ---
 
 ## 🛠 Tech Stack
 
 | Category | Technology |
-|----------|------------|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| AI Models | Google Gemini (Flash), Groq (Llama-3) |
-| Database | Vercel KV / MongoDB (Optional) |
-| PDF Processing | pdfjs-dist |
-| File Uploads | react-dropzone |
+| :--- | :--- |
+| **Framework** | [Next.js 15](https://nextjs.org/) (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS |
+| **AI Models** | Google Gemini (Flash), Groq (Llama-3) |
+| **Database** | Vercel KV / MongoDB (Optional) |
+| **PDF Processing** | `pdfjs-dist` |
+| **File Uploads** | `react-dropzone` |
 
 ---
 
 ## 🚀 Installation & Setup Guide
 
 ### ✅ Prerequisites
-
 - Node.js (v18 or higher recommended)
 - npm or yarn
 - Google Gemini API Key
 - Groq API Key
 
----
-
 ### 📥 Step 1: Clone the Repository
-
 ```bash
-git clone https://github.com/AbhishekChoudhary989/Resume_Analyzer_NEXT.git
+git clone [https://github.com/AbhishekChoudhary989/Resume_Analyzer_NEXT.git](https://github.com/AbhishekChoudhary989/Resume_Analyzer_NEXT.git)
 cd Resume_Analyzer_NEXT
-```
 
 ---
 
