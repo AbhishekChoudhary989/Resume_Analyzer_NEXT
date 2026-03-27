@@ -136,7 +136,7 @@ export default function DashboardCharts() {
                         <BarChart data={activityData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                            <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', background: '#1e293b', color: '#fff' }} />
+                            <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', background: '#000000', color: '#fff' }} />
                             <Bar dataKey="problems" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} />
                         </BarChart>
                     </ResponsiveContainer>

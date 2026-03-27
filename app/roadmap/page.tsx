@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, ArrowRight, Upload, FileText, CheckCircle2,
-    Loader2, Globe, Cpu, ScanFace, Binary
+    Loader2, Globe, Cpu, ScanFace, Binary, Network
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
+
+// ✅ Import your Visualizer
+import RoadmapVisualizer from "@/components/RoadmapVisualizer";
 
 export default function RoadmapPage() {
     const [file, setFile] = useState<File | null>(null);
@@ -16,6 +19,9 @@ export default function RoadmapPage() {
     const [jobsLoading, setJobsLoading] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [logMessages, setLogMessages] = useState<string[]>([]);
+
+    // ✅ NEW STATE: Controls if we are viewing the text dashboard OR the visual map
+    const [isVisualizing, setIsVisualizing] = useState(false);
 
     // 1. TERMINAL EFFECT
     useEffect(() => {
@@ -82,6 +88,41 @@ export default function RoadmapPage() {
         }
     };
 
+    // ✅ HELPER: Convert the AI's roadmap steps into React Flow Nodes and Edges
+    const generateFlowData = () => {
+        if (!result?.analysis?.roadmap) return { nodes: [], edges: [] };
+
+        const nodes: any[] = [];
+        const edges: any[] = [];
+
+        result.analysis.roadmap.forEach((step: any, index: number) => {
+            // Create a node for each step
+            nodes.push({
+                id: `${index}`,
+                type: 'turbo',
+                position: { x: 1350, y: index * 350 }, // Increased to 350 for plenty of breathing room!
+                data: {
+                    title: step.step,
+                    description: step.description,
+                    link: step.resources?.[0] || null // Use the first resource as a link if it exists
+                }
+            });
+
+            // Connect this node to the previous one with an edge
+            if (index > 0) {
+                edges.push({
+                    id: `e${index - 1}-${index}`,
+                    source: `${index - 1}`,
+                    target: `${index}`,
+                    animated: true,
+                    style: { stroke: '#06b6d4', strokeWidth: 2 } // Cyan colored line
+                });
+            }
+        });
+
+        return { nodes, edges };
+    };
+
     return (
         <div className="min-h-screen bg-[#030712] text-slate-300 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden relative">
 
@@ -95,10 +136,18 @@ export default function RoadmapPage() {
             {/* --- NAVBAR --- */}
             <header className="sticky top-0 z-50 bg-[#030712]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-6">
-                    <Link href="/" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/>
-                        BACK
-                    </Link>
+                    {/* ✅ BACK BUTTON LOGIC: If visualizing, go back to results. If not, normal link. */}
+                    {isVisualizing ? (
+                        <button onClick={() => setIsVisualizing(false)} className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/>
+                            BACK TO RESULTS
+                        </button>
+                    ) : (
+                        <Link href="/" className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+                            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform"/>
+                            BACK
+                        </Link>
+                    )}
                     <div className="h-6 w-[1px] bg-white/10"></div>
                     <span className="text-sm font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent tracking-wide">
                         PATHGENIE AI
@@ -108,11 +157,10 @@ export default function RoadmapPage() {
 
             <main className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-32">
 
-                {/* --- VIEW 1: SCANNER UI (Old Look Restored) --- */}
+                {/* --- VIEW 1: SCANNER UI --- */}
                 {!result && !mainLoading && (
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center min-h-[60vh]">
 
-                        {/* Glowing Scanner Icon */}
                         <div className="relative mb-8 group">
                             <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                             <div className="relative bg-[#0B0F19] border border-white/10 p-8 rounded-3xl shadow-2xl flex items-center justify-center">
@@ -127,7 +175,6 @@ export default function RoadmapPage() {
                             </span>
                         </h1>
 
-                        {/* Upload Box */}
                         <div className="relative group w-full max-w-lg cursor-pointer mt-8">
                             <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" accept=".pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
 
@@ -173,8 +220,40 @@ export default function RoadmapPage() {
                     </div>
                 )}
 
-                {/* --- VIEW 3: RESULTS DASHBOARD --- */}
-                {result && (
+                {/* --- VIEW 3: TRUE FULLSCREEN ROADMAP VISUALIZER --- */}
+                {result && isVisualizing && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="fixed inset-0 z-[100] bg-[#030712] flex flex-col"
+                    >
+                        {/* Top Navigation Bar just for the map */}
+                        <div className="px-6 py-4 bg-[#0B0F19]/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center z-10 shadow-lg">
+                            <div>
+                                <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
+                                    <Network className="text-cyan-400" size={28} /> Interactive Node Map
+                                </h2>
+                            </div>
+                            <button
+                                onClick={() => setIsVisualizing(false)}
+                                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-lg font-bold text-xs tracking-widest uppercase transition-all"
+                            >
+                                <ArrowLeft size={16} /> Exit Map
+                            </button>
+                        </div>
+
+                        {/* The Canvas - Now takes 100% of the screen width and height */}
+                        <div className="flex-1 w-full h-full relative">
+                            <RoadmapVisualizer
+                                nodes={generateFlowData().nodes}
+                                edges={generateFlowData().edges}
+                            />
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* --- VIEW 4: NORMAL RESULTS DASHBOARD --- */}
+                {result && !isVisualizing && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-8">
 
                         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900/40 to-cyan-900/40 border border-white/10 p-8 md:p-12">
@@ -185,6 +264,8 @@ export default function RoadmapPage() {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                            {/* LEFT COLUMN */}
                             <div className="lg:col-span-2 space-y-8">
                                 <div className="bg-[#0B0F19]/60 backdrop-blur-md border border-white/5 rounded-3xl p-8 md:p-10 shadow-xl">
                                     {result.analysis?.roadmap ? (
@@ -217,8 +298,28 @@ export default function RoadmapPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* ✅ THE TOGGLE BUTTON INSTEAD OF A NEXT/LINK */}
+                                <div className="bg-[#0B0F19]/60 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Network size={20} className="text-cyan-400" />
+                                            Interactive Node Map
+                                        </h3>
+                                        <p className="text-sm text-slate-400 mt-1">Explore your custom execution plan visually.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsVisualizing(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-400 text-cyan-400 rounded-xl font-bold text-sm tracking-widest uppercase transition-all group whitespace-nowrap"
+                                    >
+                                        Visualize Map
+                                        <ArrowRight size={16} className="opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                    </button>
+                                </div>
+
                             </div>
 
+                            {/* RIGHT COLUMN: Live Jobs */}
                             <div className="space-y-6">
                                 <div className="bg-[#0B0F19] border border-white/10 rounded-3xl p-6 sticky top-24">
                                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -241,6 +342,7 @@ export default function RoadmapPage() {
                                     ))}
                                 </div>
                             </div>
+
                         </div>
                     </motion.div>
                 )}

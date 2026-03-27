@@ -3,15 +3,13 @@
 import Navbar from "@/components/Navbar";
 import ResumeCard from "@/components/ResumeCard";
 import DashboardCharts from "@/components/DashboardCharts";
-import LinkedInOptimizer from "@/components/LinkedInOptimizer";
 import Link from "next/link";
+import { Linkedin, Code2, FileText, Zap, Sparkles, ChevronRight, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Code2 } from "lucide-react";
 
 export default function Home() {
   const [resumes, setResumes] = useState<any[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(true);
-  const [latestResumeText, setLatestResumeText] = useState("");
 
   useEffect(() => {
     const loadResumes = async () => {
@@ -27,13 +25,6 @@ export default function Home() {
           const data = await res.json();
           const sortedData = data.reverse();
           setResumes(sortedData);
-
-          // Extract latest text for LinkedIn Optimizer
-          if (sortedData.length > 0) {
-            const latest = sortedData[0];
-            const contentToOptimize = latest.feedback || latest.summary || latest;
-            setLatestResumeText(JSON.stringify(contentToOptimize));
-          }
         }
       } catch (error) {
         console.error("Failed to load resumes");
@@ -69,6 +60,9 @@ export default function Home() {
             <Link href="/codequest" className="bg-emerald-600 text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-500 transition-transform hover:scale-105 flex items-center gap-2">
               <span>CodeQuest</span> <Code2 size={18} />
             </Link>
+            <Link href="/linkedin" className="bg-[#0A66C2] text-white px-6 py-3 rounded-full font-bold hover:bg-[#004182] transition-transform hover:scale-105 flex items-center gap-2">
+              <Linkedin size={18} /> <span>LinkedIn Optimizer</span>
+            </Link>
           </div>
         </section>
 
@@ -76,13 +70,66 @@ export default function Home() {
           {/* 1. DASHBOARD CHARTS */}
           <DashboardCharts />
 
-          {/* 2. LINKEDIN OPTIMIZER */}
-          <div className="my-12 max-w-3xl mx-auto">
-            <LinkedInOptimizer resumeText={latestResumeText} />
+          {/* 2. HOW IT WORKS & BENEFITS DOCUMENTATION SECTION */}
+          <div className="mt-20 mb-16">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <Info className="text-white" size={20} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Platform Guide & Benefits</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  title: "Resume Analyzer",
+                  usage: "Upload PDF → Get Score",
+                  benefit: "Pass ATS filters with expert keyword optimization and structural feedback.",
+                  icon: <FileText className="text-blue-500" />,
+                  color: "blue"
+                },
+                {
+                  title: "Career Roadmap",
+                  usage: "View Path → Study Steps",
+                  benefit: "Visualize your growth with personalized node-based learning flows and job matches.",
+                  icon: <Zap className="text-indigo-500" />,
+                  color: "indigo"
+                },
+                {
+                  title: "CodeQuest",
+                  usage: "Solve Code → AI Review",
+                  benefit: "Master technical interviews with real-time logic evaluations and optimal solutions.",
+                  icon: <Code2 className="text-emerald-500" />,
+                  color: "emerald"
+                },
+                {
+                  title: "LinkedIn Optimizer",
+                  usage: "Generate → Copy & Paste",
+                  benefit: "Build a viral personal brand with story-driven bios that attract top recruiters.",
+                  icon: <Linkedin className="text-blue-600" />,
+                  color: "blue"
+                }
+              ].map((item, i) => (
+                  <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden">
+                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                      {item.icon}
+                    </div>
+                    <h3 className="font-bold text-slate-900 mb-2">{item.title}</h3>
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <Sparkles size={12} className="text-blue-600" />
+                      <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">{item.usage}</p>
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed font-medium">{item.benefit}</p>
+                    <div className="mt-6 flex items-center gap-1 text-xs font-bold text-slate-400 group-hover:text-slate-900 transition-colors">
+                      Learn more <ChevronRight size={14} />
+                    </div>
+                  </div>
+              ))}
+            </div>
           </div>
 
           {/* 3. RESUME GRID */}
-          <div>
+          <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               Your Resumes <span className="bg-slate-200 text-xs px-2 py-1 rounded-full">{resumes.length}</span>
             </h2>
