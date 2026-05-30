@@ -22,6 +22,13 @@ export async function POST(req: Request) {
             // 2. Convert incoming base64 payload straight into a raw memory data buffer
             const dataBuffer = Buffer.from(pdfBase64, 'base64');
 
+            // ✅ FIX FOR VERCEL: Disable native canvas hook check on backend serverless functions
+            // This prevents pdfjs from looking for '@napi-rs/canvas'
+            const pdfjsLib = require('pdfjs-dist/build/pdf.mjs');
+            if (pdfjsLib?.GlobalWorkerOptions) {
+                pdfjsLib.GlobalWorkerOptions.disableFontFace = true;
+            }
+
             // 3. Parse the PDF out of pure server RAM memory
             const pdfData = await parsePdf(dataBuffer);
 
@@ -32,8 +39,6 @@ export async function POST(req: Request) {
             console.log("--------------------------------------------------");
             console.log("📄 PDF PARSING SUCCESSFUL (FROM MEMORY BUFFER)");
             console.log("Characters Extracted:", resumeText.length);
-            console.log("Preview (First 200 chars):");
-            console.log(resumeText.substring(0, 200) + "...");
             console.log("--------------------------------------------------");
         } catch (parseError: any) {
             console.error("❌ PDF Parsing Exception:", parseError);
