@@ -14,8 +14,8 @@ export async function POST(req: Request) {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Define the upload directory (public/uploads)
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        // Define the upload directory using Vercel's allowed /tmp folder
+        const uploadDir = '/tmp';
 
         // Ensure the directory exists
         try {
