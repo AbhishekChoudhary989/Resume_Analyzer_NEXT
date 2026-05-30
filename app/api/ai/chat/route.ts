@@ -7,10 +7,10 @@ import { connectDB } from '../../../lib/db';
 
 export async function POST(req: Request) {
     try {
-        // 1. Establish database connection
+        // 1. Establish cloud database cluster connection
         await connectDB();
 
-        // Read incoming payload parameters
+        // Read incoming browser data string payloads
         const { prompt, pdfBase64 } = await req.json();
         let resumeText = "";
 
@@ -22,26 +22,17 @@ export async function POST(req: Request) {
             // 2. Convert incoming base64 payload straight into a raw memory data buffer
             const dataBuffer = Buffer.from(pdfBase64, 'base64');
 
-            // ✅ FIX FOR VERCEL: Disable native canvas hook check on backend serverless functions
-            // This prevents pdfjs from looking for '@napi-rs/canvas'
-            const pdfjsLib = require('pdfjs-dist/build/pdf.mjs');
-            if (pdfjsLib?.GlobalWorkerOptions) {
-                pdfjsLib.GlobalWorkerOptions.disableFontFace = true;
-            }
-
-            // 3. Parse the PDF out of pure server RAM memory
+            // 3. Parse text layer cleanly out of pure server RAM memory
             const pdfData = await parsePdf(dataBuffer);
-
-            // Clean up the text (remove null bytes)
             resumeText = pdfData.text.replace(/\0/g, '').trim();
 
             // 🔍 DEBUG LOG: SHOW ME THE TEXT!
             console.log("--------------------------------------------------");
-            console.log("📄 PDF PARSING SUCCESSFUL (FROM MEMORY BUFFER)");
+            console.log("📄 PURE-JS PDF PARSING SUCCESSFUL");
             console.log("Characters Extracted:", resumeText.length);
             console.log("--------------------------------------------------");
         } catch (parseError: any) {
-            console.error("❌ PDF Parsing Exception:", parseError);
+            console.error("❌ Parsing Bridge Exception:", parseError);
             return NextResponse.json({ error: "Failed to read data structure from PDF string: " + parseError.message }, { status: 422 });
         }
 
@@ -49,7 +40,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Resume text is empty or too short." }, { status: 400 });
         }
 
-        // 4. Send clean text over to AI service configuration for Analysis
+        // 4. Send clean string text to your core AI analysis service configurations
         const jobTitle = prompt.replace("Target Role:", "").split('.')[0].trim();
         console.log(`🤖 Analyzing with AI for role: ${jobTitle}...`);
 
