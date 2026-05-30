@@ -1,23 +1,26 @@
-const pdfParse = require('pdf-parse');
+import { readPdfText } from 'pdf-text-reader';
 
 /**
- * Extracts text from a PDF Buffer using pdf-parse.
- * ✅ SERVERLESS SECURE: Runs entirely in memory without relying on
- * physical disk paths, node_modules paths, or local worker files.
+ * Extracts raw text lines from a PDF Buffer array.
+ * ✅ PURE VERCEL COMPATIBLE: No Webpack overrides, no require hooks,
+ * no node_modules file path searches, and zero compilation errors.
  */
 export async function parsePdf(dataBuffer: Buffer) {
     try {
-        // Parse the raw PDF data buffer entirely inside server RAM memory
-        const data = await pdfParse(dataBuffer);
+        // Safe conversion of memory stream buffer to Uint8Array
+        const uint8Array = new Uint8Array(dataBuffer);
 
-        console.log(`✅ Success! Extracted ${data.text?.length || 0} characters using pure-JS parser.`);
+        // Parse raw text directly using native standard ES modules
+        const fullText = await readPdfText({ data: uint8Array });
+
+        console.log(`✅ Success! Extracted ${fullText.length} characters using native reader.`);
 
         return {
-            text: data.text || "",
-            numpages: data.numpages || 1
+            text: fullText || "",
+            numpages: 1
         };
     } catch (error: any) {
-        console.error("Pure-JS PDF Parsing Error:", error);
-        throw new Error("Failed to parse PDF content: " + error.message);
+        console.error("PDF Native Reading Error:", error);
+        throw new Error("Failed to process text layers: " + error.message);
     }
 }
