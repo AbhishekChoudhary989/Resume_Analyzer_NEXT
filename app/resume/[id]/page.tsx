@@ -50,10 +50,11 @@ export default function ResumePage() {
                     </Link>
                 </div>
                 {resumeUrl ? (
-                    resumeUrl.endsWith(".pdf") ? (
-                        <iframe src={resumeUrl} className="w-full h-full" title="Resume PDF" />
-                    ) : (
+                    // ✅ FIXED: Safely identify Base64 Data image strings or standard file extensions
+                    resumeUrl.startsWith("data:image") || resumeUrl.endsWith(".png") || resumeUrl.endsWith(".jpg") ? (
                         <img src={resumeUrl} alt="Resume Preview" className="w-full h-full object-contain bg-slate-800" />
+                    ) : (
+                        <iframe src={resumeUrl} className="w-full h-full" title="Resume PDF" />
                     )
                 ) : (
                     <div className="h-full flex items-center justify-center text-slate-500">Loading Preview...</div>

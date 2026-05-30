@@ -15,9 +15,20 @@ export default function UploadPage() {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
-
-    // THE GATEKEEPER STATE
     const [isStarted, setIsStarted] = useState(false);
+
+    // Helper to turn the browser file object into a base64 string
+    const fileToBase64 = (targetFile: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(targetFile);
+            reader.onload = () => {
+                const base64String = (reader.result as string).split(",")[1];
+                resolve(base64String);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
 
     const handleAnalyze = async () => {
         setErrorMsg("");
@@ -27,22 +38,18 @@ export default function UploadPage() {
         setStatus("Generating preview image...");
 
         try {
-            const imageResult = await convertPdfToImage(file);
-            const imageFile = imageResult.file;
+            let base64Preview = "";
+            try {
+                const imageResult = await convertPdfToImage(file);
+                // ✅ Targets your fresh base64 string property directly with fallback
+                base64Preview = imageResult.base64 || imageResult.imageUrl || "";
+            } catch (imgErr) {
+                console.warn("Image generation failed, continuing with PDF only...", imgErr);
+            }
 
-            if (!imageFile) console.warn("Image generation failed, continuing with PDF only...");
-
-            setStatus("Uploading files...");
-            const formData = new FormData();
-            formData.append("files", file);
-            if (imageFile) formData.append("files", imageFile);
-
-            const uploadRes = await fetch("/api/files/upload", { method: "POST", body: formData });
-            if (!uploadRes.ok) throw new Error("Upload failed.");
-
-            const filesData = await uploadRes.json();
-            const pdfUrl = filesData.find((f: any) => f.url.endsWith(".pdf"))?.url || filesData[0]?.url;
-            const imageUrl = filesData.find((f: any) => f.url.endsWith(".png"))?.url || "";
+            setStatus("Reading resume contents...");
+            // Convert the user's uploaded PDF file directly into a base64 string right in the browser
+            const pdfBase64String = await fileToBase64(file);
 
             setStatus("Analyzing resume with AI...");
             const aiRes = await fetch("/api/ai/chat", {
@@ -50,7 +57,7 @@ export default function UploadPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     prompt: `Target Role: ${jobTitle}. strict JSON return.`,
-                    fileUrl: pdfUrl
+                    pdfBase64: pdfBase64String // Sent directly via data payload
                 })
             });
 
@@ -60,6 +67,8 @@ export default function UploadPage() {
             const feedback = JSON.parse(content);
 
             const newId = Date.now().toString();
+            setStatus("Saving analysis data...");
+
             await fetch("/api/kv/set", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -69,8 +78,8 @@ export default function UploadPage() {
                         id: newId,
                         jobTitle,
                         overallScore: feedback.overallScore || 0,
-                        resumePath: pdfUrl,
-                        previewUrl: imageUrl,
+                        resumePath: "",
+                        previewUrl: base64Preview,
                         feedback,
                         createdAt: new Date()
                     }
@@ -87,7 +96,6 @@ export default function UploadPage() {
         }
     };
 
-    // IF STARTED, SHOW ORIGINAL UPLOAD TOOL
     if (isStarted) {
         return (
             <div className="min-h-screen bg-slate-50">
@@ -120,18 +128,13 @@ export default function UploadPage() {
         );
     }
 
-    // OTHERWISE SHOW LANDING PAGE
     return (
         <ModuleLanding
             title="ATS Resume Checker: Scan & Score Your Resume"
             subtitle="Beat the bots. Our AI-powered checker simulates modern Applicant Tracking Systems to ensure your resume reaches a human hiring manager."
             heroGraphic={
                 <div className="relative w-full max-w-xl mx-auto rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] border-4 border-white/20">
-                    <img
-                        src="/images/resume-mockup.png"
-                        alt="ATS Resume Scanner Mockup"
-                        className="w-full h-auto object-contain"
-                    />
+                    <img src="/images/resume-mockup.png" alt="ATS Resume Scanner Mockup" className="w-full h-auto object-contain" />
                 </div>
             }
             actionComponent={

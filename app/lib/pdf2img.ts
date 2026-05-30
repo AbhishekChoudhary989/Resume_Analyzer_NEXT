@@ -1,5 +1,6 @@
 export interface PdfConversionResult {
     imageUrl: string;
+    base64: string; // ✅ ADDED: Explicitly declare the string format type
     file: File | null;
     error?: string;
 }
@@ -14,7 +15,6 @@ async function loadPdfJs(): Promise<any> {
         const lib = (await import("pdfjs-dist/build/pdf.mjs")) as any;
 
         // 2. Point to the LOCAL worker in your public folder
-        // ✅ TRICK: Added '?v=5.4.624' to force browser to ignore old cached versions
         lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs?v=5.4.624";
 
         console.log("✅ PDF Preview Worker Configured (Local)");
@@ -32,7 +32,7 @@ export async function convertPdfToImage(file: File): Promise<PdfConversionResult
         const lib = await loadPdfJs();
         const arrayBuffer = await file.arrayBuffer();
 
-        // 3. Load Document (Using CDN for Font Maps is fine and recommended)
+        // 3. Load Document
         const loadingTask = lib.getDocument({
             data: arrayBuffer,
             cMapUrl: `https://unpkg.com/pdfjs-dist@${lib.version}/cmaps/`,
@@ -47,7 +47,7 @@ export async function convertPdfToImage(file: File): Promise<PdfConversionResult
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
 
-        if (!context) return { imageUrl: "", file: null, error: "Canvas Context Failed" };
+        if (!context) return { imageUrl: "", base64: "", file: null, error: "Canvas Context Failed" };
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -62,6 +62,9 @@ export async function convertPdfToImage(file: File): Promise<PdfConversionResult
             viewport: viewport
         }).promise;
 
+        // ✅ 7. Read image directly as a Base64 data string right from the canvas memory
+        const base64String = canvas.toDataURL("image/png");
+
         return new Promise((resolve) => {
             canvas.toBlob((blob) => {
                 if (blob) {
@@ -72,10 +75,11 @@ export async function convertPdfToImage(file: File): Promise<PdfConversionResult
 
                     resolve({
                         imageUrl: URL.createObjectURL(blob),
+                        base64: base64String, // ✅ Sent safely down the pipeline
                         file: imageFile,
                     });
                 } else {
-                    resolve({ imageUrl: "", file: null, error: "Blob creation failed" });
+                    resolve({ imageUrl: "", base64: "", file: null, error: "Blob creation failed" });
                 }
             }, "image/png");
         });
@@ -84,6 +88,7 @@ export async function convertPdfToImage(file: File): Promise<PdfConversionResult
         console.error("❌ PDF Preview Error:", err);
         return {
             imageUrl: "",
+            base64: "",
             file: null,
             error: `Preview failed: ${err.message || err}`,
         };

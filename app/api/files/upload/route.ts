@@ -33,10 +33,10 @@ export async function POST(req: Request) {
         // Write the file to the filesystem
         await writeFile(filepath, buffer);
 
-        // Return the URL that the frontend can use
+        // Return the path that the backend AI route can read directly
         // Note: In production, you'd upload to S3/Cloudinary.
         // For local dev, serving from public/uploads works.
-        const url = `/uploads/${filename}`;
+        const url = filepath;
 
         return NextResponse.json([{ name: file.name, url }]);
     } catch (error) {

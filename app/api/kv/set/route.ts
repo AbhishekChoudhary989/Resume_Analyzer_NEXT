@@ -13,9 +13,12 @@ export async function POST(req: Request) {
             {
                 key,
                 value,
-                createdAt: new Date() // Updates time for the graph
+                createdAt: new Date()
             },
-            { upsert: true, new: true }
+            {
+                upsert: true,
+                returnDocument: 'after' // ✅ FIXED: Replaced deprecated 'new: true' to silence console warnings
+            }
         );
 
         return NextResponse.json({ success: true });

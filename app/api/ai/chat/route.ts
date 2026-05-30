@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 // ✅ RELATIVE IMPORTS: Ensures files are found correctly
 import { parsePdf } from '../../../lib/pdf-loader';
@@ -9,44 +7,44 @@ import { connectDB } from '../../../lib/db';
 
 export async function POST(req: Request) {
     try {
+        // 1. Establish database connection
         await connectDB();
-        const { prompt, fileUrl } = await req.json();
+
+        // Read incoming payload parameters
+        const { prompt, pdfBase64 } = await req.json();
         let resumeText = "";
 
-        // 1. Resolve File Path from URL
-        if (fileUrl && fileUrl.includes('/uploads/')) {
-            const filename = fileUrl.split('/uploads/')[1];
-            // Uses standard file system path to find the uploaded file
-            const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+        if (!pdfBase64) {
+            return NextResponse.json({ error: "Missing uploaded file data string." }, { status: 400 });
+        }
 
-            if (fs.existsSync(filePath)) {
-                // 2. Parse the PDF
-                const dataBuffer = fs.readFileSync(filePath);
-                const pdfData = await parsePdf(dataBuffer);
+        try {
+            // 2. Convert incoming base64 payload straight into a raw memory data buffer
+            const dataBuffer = Buffer.from(pdfBase64, 'base64');
 
-                // Clean up the text (remove null bytes)
-                resumeText = pdfData.text.replace(/\0/g, '').trim();
+            // 3. Parse the PDF out of pure server RAM memory
+            const pdfData = await parsePdf(dataBuffer);
 
-                // 🔍 DEBUG LOG: SHOW ME THE TEXT!
-                // This prints the first 500 characters to your VS Code terminal.
-                console.log("--------------------------------------------------");
-                console.log("📄 PDF PARSING SUCCESSFUL");
-                console.log("Characters Extracted:", resumeText.length);
-                console.log("Preview (First 200 chars):");
-                console.log(resumeText.substring(0, 500) + "...");
-                console.log("--------------------------------------------------");
+            // Clean up the text (remove null bytes)
+            resumeText = pdfData.text.replace(/\0/g, '').trim();
 
-            } else {
-                console.error("❌ File not found at path:", filePath);
-                return NextResponse.json({ error: "File not found on server." }, { status: 404 });
-            }
+            // 🔍 DEBUG LOG: SHOW ME THE TEXT!
+            console.log("--------------------------------------------------");
+            console.log("📄 PDF PARSING SUCCESSFUL (FROM MEMORY BUFFER)");
+            console.log("Characters Extracted:", resumeText.length);
+            console.log("Preview (First 200 chars):");
+            console.log(resumeText.substring(0, 200) + "...");
+            console.log("--------------------------------------------------");
+        } catch (parseError: any) {
+            console.error("❌ PDF Parsing Exception:", parseError);
+            return NextResponse.json({ error: "Failed to read data structure from PDF string: " + parseError.message }, { status: 422 });
         }
 
         if (!resumeText || resumeText.length < 50) {
             return NextResponse.json({ error: "Resume text is empty or too short." }, { status: 400 });
         }
 
-        // 3. Send to AI for Analysis
+        // 4. Send clean text over to AI service configuration for Analysis
         const jobTitle = prompt.replace("Target Role:", "").split('.')[0].trim();
         console.log(`🤖 Analyzing with AI for role: ${jobTitle}...`);
 
