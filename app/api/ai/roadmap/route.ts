@@ -1,7 +1,20 @@
+// Polyfill browser globals for Vercel Serverless Node Runtime
+if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+    (globalThis as any).DOMMatrix = class DOMMatrix {};
+}
+if (typeof (globalThis as any).ImageData === 'undefined') {
+    (globalThis as any).ImageData = class ImageData {};
+}
+if (typeof (globalThis as any).Path2D === 'undefined') {
+    (globalThis as any).Path2D = class Path2D {};
+}
+
+export const runtime = 'nodejs';
+
 import { NextResponse } from 'next/server';
-import { generateRoadmap, extractSearchParams } from '@/app/lib/ai-service';
-import { connectDB } from '@/app/lib/db';
-import { parsePdf } from '@/app/lib/pdf-loader'; // ✅ Corrected path to root lib
+import { generateRoadmap, extractSearchParams } from '@/lib/ai-service';
+import { parsePdf } from '../../../lib/pdf-loader';
+import { connectDB } from '../../../lib/db';
 
 export async function POST(req: Request) {
     try {
@@ -14,10 +27,8 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-
-        // Use the fixed helper to extract text
         const pdfData = await parsePdf(buffer);
-        const resumeText = pdfData.text.replace(/\0/g, '').trim();
+        const resumeText = pdfData.text.replace(/0/g, '').trim();
 
         if (resumeText.length < 50) {
             return NextResponse.json({ error: "Resume text too short." }, { status: 400 });
