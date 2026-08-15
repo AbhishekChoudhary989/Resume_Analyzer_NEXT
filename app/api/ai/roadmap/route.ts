@@ -12,9 +12,9 @@ if (typeof (globalThis as any).Path2D === 'undefined') {
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { generateRoadmap, extractSearchParams } from '@/lib/ai-service';
-import { parsePdf } from '../../../lib/pdf-loader';
+import { generateRoadmap, extractSearchParams } from '../../../lib/ai-service';
 import { connectDB } from '../../../lib/db';
+import { parsePdf } from '../../../lib/pdf-loader';
 
 export async function POST(req: Request) {
     try {
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const pdfData = await parsePdf(buffer);
-        const resumeText = pdfData.text.replace(/0/g, '').trim();
+        const resumeText = pdfData.text.replace(/\0/g, '').trim();
 
         if (resumeText.length < 50) {
             return NextResponse.json({ error: "Resume text too short." }, { status: 400 });

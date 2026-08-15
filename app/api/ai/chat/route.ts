@@ -15,7 +15,6 @@ import { NextResponse } from 'next/server';
 import { parsePdf } from '../../../lib/pdf-loader';
 import { analyzeResume } from '../../../lib/ai-service';
 import { connectDB } from '../../../lib/db';
-
 export async function POST(req: Request) {
     try {
         await connectDB();
